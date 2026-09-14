@@ -17,7 +17,6 @@ app.get('/', (req, res) => {
     titulo: 'API de Productos',
     mensaje: '¡Bienvenidos a la Primera Entrega!',
     integrantes: [
-      'Florencia Guzmán',
       'Sonia Raquel Andrada',
       'Guillermo Chacón',
       'Eitel Hugo Belinzoni',
