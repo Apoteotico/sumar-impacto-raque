@@ -1,10 +1,30 @@
-class Persona {
-    constructor(id, nombre, email, tipo) {
-        this.id = id;
-        this.nombre = nombre;
-        this.email = email;
-        this.tipo = tipo; // "donante" o "responsable"
-    }
-}
+import mongoose from "mongoose";
 
-module.exports = Persona;
+const personaSchema = new mongoose.Schema(
+  {
+    nombre: {
+      type: String,
+      required: [true, "El nombre es obligatorio"],
+      trim: true
+    },
+    email: {
+      type: String,
+      required: [true, "El email institucional es obligatorio"],
+      trim: true,
+      lowercase: true
+    },
+    tipo: {
+      type: String,
+      required: [true, "El tipo es obligatorio"],
+      enum: {
+        values: ["donante", "responsable"],
+        message: "El tipo debe ser 'donante' o 'responsable'"
+      }
+    }
+  },
+  {
+    timestamps: true
+  }
+);
+
+export default mongoose.model("Persona", personaSchema);
