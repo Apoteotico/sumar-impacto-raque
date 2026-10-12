@@ -1,115 +1,72 @@
-const fs = require("fs");
-const path = require("path");
-const Persona = require("../models/Persona");
+import Persona from "../models/Persona.js";
 
-const rutaArchivo = path.join(__dirname, "../data/datos.json");
-
-const leerDatos = () => {
-    const raw = fs.readFileSync(rutaArchivo, "utf-8");
-    return JSON.parse(raw);
+export const obtenerPersonas = async (req, res) => {
+  try {
+    const personas = await Persona.find().sort({ nombre: 1 });
+    res.status(200).json(personas);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al obtener la lista de personas", error: error.message });
+  }
 };
 
-const guardarDatos = (datos) => {
-    fs.writeFileSync(rutaArchivo, JSON.stringify(datos, null, 2));
-};
-
-const obtenerPersonas = (req, res) => {
-    try {
-        const datos = leerDatos();
-        res.status(200).json(datos.personas);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al leer los datos de personas" });
+export const obtenerPersonaPorId = async (req, res) => {
+  try {
+    const persona = await Persona.findById(req.params.id);
+    if (!persona) {
+      return res.status(404).json({ mensaje: "Persona no encontrada" });
     }
+    res.status(200).json(persona);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al buscar la persona solicitada", error: error.message });
+  }
 };
 
-const obtenerPersonaPorId = (req, res) => {
-    try {
-        const datos = leerDatos();
-        const id = parseInt(req.params.id, 10);
-        const persona = datos.personas.find((p) => p.id === id);
+export const crearPersona = async (req, res) => {
+  try {
+    const { nombre, email, tipo } = req.body;
+    const nuevaPersona = new Persona({ nombre, email, tipo });
+    await nuevaPersona.save();
 
-        if (!persona) {
-            return res.status(404).json({ mensaje: "Persona no encontrada" });
-        }
+    res.status(201).json({
+      mensaje: "Persona creada exitosamente en MongoDB",
+      persona: nuevaPersona
+    });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al guardar la nueva persona", error: error.message });
+  }
+};
 
-        res.status(200).json(persona);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al buscar la persona solicitada" });
+export const actualizarPersona = async (req, res) => {
+  try {
+    const { nombre, email, tipo } = req.body;
+    const personaActualizada = await Persona.findByIdAndUpdate(
+      req.params.id,
+      { nombre, email, tipo },
+      { new: true, runValidators: true }
+    );
+
+    if (!personaActualizada) {
+      return res.status(404).json({ mensaje: "Persona no encontrada" });
     }
+
+    res.status(200).json({
+      mensaje: "Persona actualizada exitosamente",
+      persona: personaActualizada
+    });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al actualizar la persona", error: error.message });
+  }
 };
 
-const crearPersona = (req, res) => {
-    try {
-        const { nombre, email, tipo } = req.body;
-        const datos = leerDatos();
-
-        const nuevoId = datos.personas.length > 0
-            ? Math.max(...datos.personas.map((p) => p.id)) + 1
-            : 1;
-
-        const nuevaPersona = new Persona(nuevoId, nombre, email, tipo);
-        datos.personas.push(nuevaPersona);
-        guardarDatos(datos);
-
-        res.status(201).json({
-            mensaje: "Persona creada exitosamente",
-            persona: nuevaPersona
-        });
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al guardar la nueva persona" });
+export const eliminarPersona = async (req, res) => {
+  try {
+    const personaEliminada = await Persona.findByIdAndDelete(req.params.id);
+    if (!personaEliminada) {
+      return res.status(404).json({ mensaje: "Persona no encontrada" });
     }
-};
 
-const actualizarPersona = (req, res) => {
-    try {
-        const id = parseInt(req.params.id, 10);
-        const datos = leerDatos();
-        const persona = datos.personas.find((p) => p.id === id);
-
-        if (!persona) {
-            return res.status(404).json({ mensaje: "Persona no encontrada" });
-        }
-
-        const { nombre, email, tipo } = req.body;
-        if (nombre) persona.nombre = nombre;
-        if (email) persona.email = email;
-        if (tipo) persona.tipo = tipo;
-
-        guardarDatos(datos);
-
-        res.status(200).json({
-            mensaje: "Persona actualizada exitosamente",
-            persona
-        });
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al actualizar la persona" });
-    }
-};
-
-const eliminarPersona = (req, res) => {
-    try {
-        const id = parseInt(req.params.id, 10);
-        const datos = leerDatos();
-        const longitudPrevia = datos.personas.length;
-
-        datos.personas = datos.personas.filter((p) => p.id !== id);
-
-        if (datos.personas.length === longitudPrevia) {
-            return res.status(404).json({ mensaje: "Persona no encontrada" });
-        }
-
-        guardarDatos(datos);
-
-        res.status(200).json({ mensaje: "Persona eliminada exitosamente" });
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al eliminar la persona" });
-    }
-};
-
-module.exports = {
-    obtenerPersonas,
-    obtenerPersonaPorId,
-    crearPersona,
-    actualizarPersona,
-    eliminarPersona
+    res.status(200).json({ mensaje: "Persona eliminada exitosamente" });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al eliminar la persona", error: error.message });
+  }
 };

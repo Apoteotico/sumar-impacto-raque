@@ -1,16 +1,17 @@
-const express = require("express");
-const router = express.Router();
+import express from "express";
+import {
+  inicio,
+  proyectosVista,
+  formularioDonacion,
+  procesarNuevaDonacion
+} from "../controllers/webController.js";
 
-const {
-    inicio,
-    proyectosVista,
-    formularioDonacion,
-    procesarNuevaDonacion
-} = require("../controllers/webController");
+const router = express.Router();
 
 router.get("/", inicio);
 router.get("/proyectos", proyectosVista);
 router.get("/donaciones/nueva", formularioDonacion);
 router.post("/donaciones/nueva", procesarNuevaDonacion);
+router.get("/donar", (req, res) => res.redirect("/donaciones/nueva"));
 
-module.exports = router;
+export default router;

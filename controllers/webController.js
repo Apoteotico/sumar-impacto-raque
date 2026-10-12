@@ -1,102 +1,82 @@
-const fs = require("fs");
-const path = require("path");
-const Donacion = require("../models/Donacion");
+import Persona from "../models/Persona.js";
+import Proyecto from "../models/Proyecto.js";
+import Donacion from "../models/Donacion.js";
 
-const rutaArchivo = path.join(__dirname, "../data/datos.json");
-
-const leerDatos = () => {
-    const raw = fs.readFileSync(rutaArchivo, "utf-8");
-    return JSON.parse(raw);
+export const inicio = async (req, res) => {
+  try {
+    const proyectos = await Proyecto.find().sort({ createdAt: -1 });
+    res.render("index", {
+      titulo: "Sumar Impacto - Gestion de Donaciones Comunitarias",
+      equipo: "pITzza & BirrAPI (Grupo 15)",
+      descripcion: "Plataforma de vinculacion entre organizaciones comunitarias y donantes con persistencia en MongoDB.",
+      integrantes: [
+        "Sonia Raquel Andrada",
+        "Guillermo Chacon",
+        "Eitel Hugo Belinzoni",
+        "Emilia Sosa"
+      ],
+      proyectos
+    });
+  } catch (error) {
+    res.status(500).send("Error al cargar la pagina principal: " + error.message);
+  }
 };
 
-const guardarDatos = (datos) => {
-    fs.writeFileSync(rutaArchivo, JSON.stringify(datos, null, 2));
+export const proyectosVista = async (req, res) => {
+  try {
+    const proyectos = await Proyecto.find().sort({ createdAt: -1 });
+    res.render("proyectos", {
+      titulo: "Proyectos Activos",
+      proyectos
+    });
+  } catch (error) {
+    res.status(500).send("Error al cargar los proyectos: " + error.message);
+  }
 };
 
-const inicio = (req, res) => {
-    try {
-        const datos = leerDatos();
-        res.render("index", {
-            titulo: "Sumar Impacto - Gestion de Donaciones Comunitarias",
-            equipo: "pITzza & BirrAPI (Grupo 15)",
-            descripcion: "Plataforma de vinculacion entre organizaciones no gubernamentales y donantes.",
-            integrantes: [
-                "Sonia Raquel Andrada",
-                "Guillermo Chacon",
-                "Eitel Hugo Belinzoni",
-                "Emilia Sosa"
-            ],
-            proyectos: datos.proyectos
-        });
-    } catch (error) {
-        res.status(500).send("Error al cargar la pagina principal");
+export const formularioDonacion = async (req, res) => {
+  try {
+    const donantes = await Persona.find({ tipo: "donante" }).sort({ nombre: 1 });
+    const proyectos = await Proyecto.find().sort({ nombre: 1 });
+
+    res.render("nueva-donacion", {
+      titulo: "Registrar Nueva Donacion",
+      donantes,
+      proyectos
+    });
+  } catch (error) {
+    res.status(500).send("Error al cargar el formulario de donacion: " + error.message);
+  }
+};
+
+export const procesarNuevaDonacion = async (req, res) => {
+  try {
+    const { personaId, proyectoId, monto } = req.body;
+
+    if (!personaId || !proyectoId || !monto || Number(monto) <= 0) {
+      return res.status(400).send("Datos invalidos: asegurese de seleccionar donante, proyecto y un monto valido");
     }
-};
 
-const proyectosVista = (req, res) => {
-    try {
-        const datos = leerDatos();
-        res.render("proyectos", {
-            titulo: "Proyectos Activos",
-            proyectos: datos.proyectos
-        });
-    } catch (error) {
-        res.status(500).send("Error al cargar los proyectos");
+    const persona = await Persona.findById(personaId);
+    const proyecto = await Proyecto.findById(proyectoId);
+
+    if (!persona || !proyecto) {
+      return res.status(404).send("Donante o proyecto inexistente en MongoDB");
     }
-};
 
-const formularioDonacion = (req, res) => {
-    try {
-        const datos = leerDatos();
-        const donantes = datos.personas.filter((p) => p.tipo === "donante");
+    const nuevaDonacion = new Donacion({
+      personaId,
+      proyectoId,
+      monto: Number(monto)
+    });
 
-        res.render("nueva-donacion", {
-            titulo: "Registrar Nueva Donacion",
-            donantes,
-            proyectos: datos.proyectos
-        });
-    } catch (error) {
-        res.status(500).send("Error al cargar el formulario de donacion");
-    }
-};
+    await nuevaDonacion.save();
 
-const procesarNuevaDonacion = (req, res) => {
-    try {
-        const personaId = parseInt(req.body.personaId, 10);
-        const proyectoId = parseInt(req.body.proyectoId, 10);
-        const monto = Number(req.body.monto);
+    proyecto.actualizarRecaudacion(monto);
+    await proyecto.save();
 
-        if (!personaId || !proyectoId || !monto || monto <= 0) {
-            return res.status(400).send("Datos invalidos: asegurese de seleccionar donante, proyecto y un monto valido");
-        }
-
-        const datos = leerDatos();
-        const persona = datos.personas.find((p) => p.id === personaId);
-        const proyecto = datos.proyectos.find((pr) => pr.id === proyectoId);
-
-        if (!persona || !proyecto) {
-            return res.status(404).send("Donante o proyecto inexistente");
-        }
-
-        const nuevoId = datos.donaciones.length > 0
-            ? Math.max(...datos.donaciones.map((d) => d.id)) + 1
-            : 1;
-
-        const nuevaDonacion = new Donacion(nuevoId, personaId, proyectoId, monto);
-        datos.donaciones.push(nuevaDonacion);
-
-        proyecto.recaudado += monto;
-        guardarDatos(datos);
-
-        res.redirect("/");
-    } catch (error) {
-        res.status(500).send("Error al procesar la donacion");
-    }
-};
-
-module.exports = {
-    inicio,
-    proyectosVista,
-    formularioDonacion,
-    procesarNuevaDonacion
+    res.redirect("/");
+  } catch (error) {
+    res.status(500).send("Error al procesar la donacion: " + error.message);
+  }
 };

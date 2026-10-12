@@ -1,133 +1,89 @@
-const fs = require("fs");
-const path = require("path");
-const Proyecto = require("../models/Proyecto");
+import Proyecto from "../models/Proyecto.js";
 
-const rutaArchivo = path.join(__dirname, "../data/datos.json");
+export const obtenerProyectos = async (req, res) => {
+  try {
+    const { categoria } = req.query;
+    const filtro = categoria ? { categoria: new RegExp(`^${categoria}$`, "i") } : {};
+    const proyectos = await Proyecto.find(filtro).sort({ createdAt: -1 });
 
-const leerDatos = () => {
-    const raw = fs.readFileSync(rutaArchivo, "utf-8");
-    return JSON.parse(raw);
+    res.status(200).json(proyectos);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al obtener proyectos", error: error.message });
+  }
 };
 
-const guardarDatos = (datos) => {
-    fs.writeFileSync(rutaArchivo, JSON.stringify(datos, null, 2));
-};
-
-const obtenerProyectos = (req, res) => {
-    try {
-        const datos = leerDatos();
-        const { categoria } = req.query;
-
-        if (categoria) {
-            const filtrados = datos.proyectos.filter(
-                (p) => p.categoria.toLowerCase() === categoria.toLowerCase()
-            );
-            return res.status(200).json(filtrados);
-        }
-
-        res.status(200).json(datos.proyectos);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al obtener proyectos" });
+export const obtenerProyectoPorId = async (req, res) => {
+  try {
+    const proyecto = await Proyecto.findById(req.params.id);
+    if (!proyecto) {
+      return res.status(404).json({ mensaje: "Proyecto no encontrado" });
     }
+
+    res.status(200).json(proyecto);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al buscar el proyecto solicitado", error: error.message });
+  }
 };
 
-const obtenerProyectoPorId = (req, res) => {
-    try {
-        const id = parseInt(req.params.id, 10);
-        const datos = leerDatos();
-        const proyecto = datos.proyectos.find((p) => p.id === id);
+export const crearProyecto = async (req, res) => {
+  try {
+    const { nombre, organizacion, categoria, montoMeta } = req.body;
+    const nuevoProyecto = new Proyecto({
+      nombre,
+      organizacion,
+      categoria,
+      montoMeta: Number(montoMeta),
+      recaudado: 0
+    });
 
-        if (!proyecto) {
-            return res.status(404).json({ mensaje: "Proyecto no encontrado" });
-        }
+    await nuevoProyecto.save();
 
-        res.status(200).json(proyecto);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al buscar el proyecto solicitado" });
+    res.status(201).json({
+      mensaje: "Proyecto creado exitosamente en MongoDB",
+      proyecto: nuevoProyecto
+    });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al guardar el nuevo proyecto", error: error.message });
+  }
+};
+
+export const actualizarProyecto = async (req, res) => {
+  try {
+    const { nombre, organizacion, categoria, montoMeta } = req.body;
+    const datosActualizar = {};
+    if (nombre) datosActualizar.nombre = nombre;
+    if (organizacion) datosActualizar.organizacion = organizacion;
+    if (categoria) datosActualizar.categoria = categoria;
+    if (montoMeta !== undefined) datosActualizar.montoMeta = Number(montoMeta);
+
+    const proyectoActualizado = await Proyecto.findByIdAndUpdate(
+      req.params.id,
+      datosActualizar,
+      { new: true, runValidators: true }
+    );
+
+    if (!proyectoActualizado) {
+      return res.status(404).json({ mensaje: "Proyecto no encontrado" });
     }
+
+    res.status(200).json({
+      mensaje: "Proyecto actualizado exitosamente",
+      proyecto: proyectoActualizado
+    });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al actualizar el proyecto", error: error.message });
+  }
 };
 
-const crearProyecto = (req, res) => {
-    try {
-        const { nombre, organizacion, categoria, montoMeta } = req.body;
-        const datos = leerDatos();
-
-        const nuevoId = datos.proyectos.length > 0
-            ? Math.max(...datos.proyectos.map((p) => p.id)) + 1
-            : 1;
-
-        const nuevoProyecto = new Proyecto(
-            nuevoId,
-            nombre,
-            organizacion,
-            categoria,
-            montoMeta,
-            0
-        );
-
-        datos.proyectos.push(nuevoProyecto);
-        guardarDatos(datos);
-
-        res.status(201).json({
-            mensaje: "Proyecto creado exitosamente",
-            proyecto: nuevoProyecto
-        });
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al guardar el nuevo proyecto" });
+export const eliminarProyecto = async (req, res) => {
+  try {
+    const proyectoEliminado = await Proyecto.findByIdAndDelete(req.params.id);
+    if (!proyectoEliminado) {
+      return res.status(404).json({ mensaje: "Proyecto no encontrado" });
     }
-};
 
-const actualizarProyecto = (req, res) => {
-    try {
-        const id = parseInt(req.params.id, 10);
-        const datos = leerDatos();
-        const proyecto = datos.proyectos.find((p) => p.id === id);
-
-        if (!proyecto) {
-            return res.status(404).json({ mensaje: "Proyecto no encontrado" });
-        }
-
-        const { nombre, organizacion, categoria, montoMeta } = req.body;
-        if (nombre) proyecto.nombre = nombre;
-        if (organizacion) proyecto.organizacion = organizacion;
-        if (categoria) proyecto.categoria = categoria;
-        if (montoMeta !== undefined) proyecto.montoMeta = Number(montoMeta);
-
-        guardarDatos(datos);
-
-        res.status(200).json({
-            mensaje: "Proyecto actualizado exitosamente",
-            proyecto
-        });
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al actualizar el proyecto" });
-    }
-};
-
-const eliminarProyecto = (req, res) => {
-    try {
-        const id = parseInt(req.params.id, 10);
-        const datos = leerDatos();
-        const longitudPrevia = datos.proyectos.length;
-
-        datos.proyectos = datos.proyectos.filter((p) => p.id !== id);
-
-        if (datos.proyectos.length === longitudPrevia) {
-            return res.status(404).json({ mensaje: "Proyecto no encontrado" });
-        }
-
-        guardarDatos(datos);
-
-        res.status(200).json({ mensaje: "Proyecto eliminado exitosamente" });
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al eliminar el proyecto" });
-    }
-};
-
-module.exports = {
-    obtenerProyectos,
-    obtenerProyectoPorId,
-    crearProyecto,
-    actualizarProyecto,
-    eliminarProyecto
+    res.status(200).json({ mensaje: "Proyecto eliminado exitosamente" });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al eliminar el proyecto", error: error.message });
+  }
 };

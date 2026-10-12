@@ -1,14 +1,13 @@
-const express = require("express");
+import express from "express";
+import {
+  obtenerDonaciones,
+  crearDonacion
+} from "../controllers/donacionesController.js";
+import { validarDonacion } from "../middlewares/validarCampos.js";
+
 const router = express.Router();
-
-const {
-    obtenerDonaciones,
-    crearDonacion
-} = require("../controllers/donacionesController");
-
-const { validarDonacion } = require("../middlewares/validarCampos");
 
 router.get("/", obtenerDonaciones);
 router.post("/", validarDonacion, crearDonacion);
 
-module.exports = router;
+export default router;

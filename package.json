@@ -1,23 +1,31 @@
 {
-  "name": "sumar-impacto",
-  "version": "1.0.0",
-  "description": "",
+  "name": "sumar-impacto-tp2",
+  "version": "2.0.0",
+  "description": "Plataforma comunitaria de donaciones Sumar Impacto - Entrega 2 con Node.js, Express, Pug, MongoDB y Mongoose",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "seed": "node seed.js",
+    "test": "node test_e2e.js"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "express",
+    "mongoose",
+    "mongodb",
+    "pug",
+    "mvc"
+  ],
+  "author": "pITzza & BirrAPI (Grupo 15) - IFTS 29",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "dotenv": "^18.0.0",
+    "dotenv": "^16.4.5",
     "express": "^5.2.1",
-    "pug": "^3.0.4"
+    "mongoose": "^8.8.0",
+    "pug": "^3.0.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.7"
   }
 }

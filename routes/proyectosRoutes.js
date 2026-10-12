@@ -1,20 +1,19 @@
-const express = require("express");
+import express from "express";
+import {
+  obtenerProyectos,
+  obtenerProyectoPorId,
+  crearProyecto,
+  actualizarProyecto,
+  eliminarProyecto
+} from "../controllers/proyectosController.js";
+import { validarProyecto } from "../middlewares/validarCampos.js";
+
 const router = express.Router();
-
-const {
-    obtenerProyectos,
-    obtenerProyectoPorId,
-    crearProyecto,
-    actualizarProyecto,
-    eliminarProyecto
-} = require("../controllers/proyectosController");
-
-const { validarProyecto } = require("../middlewares/validarCampos");
 
 router.get("/", obtenerProyectos);
 router.get("/:id", obtenerProyectoPorId);
 router.post("/", validarProyecto, crearProyecto);
-router.put("/:id", validarProyecto, actualizarProyecto);
+router.put("/:id", actualizarProyecto);
 router.delete("/:id", eliminarProyecto);
 
-module.exports = router;
+export default router;

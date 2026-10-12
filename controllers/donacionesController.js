@@ -1,80 +1,52 @@
-const fs = require("fs");
-const path = require("path");
-const Donacion = require("../models/Donacion");
+import Donacion from "../models/Donacion.js";
+import Persona from "../models/Persona.js";
+import Proyecto from "../models/Proyecto.js";
 
-const rutaArchivo = path.join(__dirname, "../data/datos.json");
+export const obtenerDonaciones = async (req, res) => {
+  try {
+    const donaciones = await Donacion.find()
+      .populate("personaId", "nombre email tipo")
+      .populate("proyectoId", "nombre organizacion montoMeta recaudado")
+      .sort({ createdAt: -1 });
 
-const leerDatos = () => {
-    const raw = fs.readFileSync(rutaArchivo, "utf-8");
-    return JSON.parse(raw);
+    res.status(200).json(donaciones);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al obtener las donaciones", error: error.message });
+  }
 };
 
-const guardarDatos = (datos) => {
-    fs.writeFileSync(rutaArchivo, JSON.stringify(datos, null, 2));
-};
+export const crearDonacion = async (req, res) => {
+  try {
+    const { personaId, proyectoId, monto } = req.body;
 
-const obtenerDonaciones = (req, res) => {
-    try {
-        const datos = leerDatos();
-        const listado = datos.donaciones.map((d) => {
-            const persona = datos.personas.find((p) => p.id === d.personaId);
-            const proyecto = datos.proyectos.find((pr) => pr.id === d.proyectoId);
-
-            return {
-                id: d.id,
-                monto: d.monto,
-                fecha: d.fecha,
-                donante: persona ? { id: persona.id, nombre: persona.nombre, email: persona.email } : null,
-                proyecto: proyecto ? { id: proyecto.id, nombre: proyecto.nombre, organizacion: proyecto.organizacion } : null
-            };
-        });
-
-        res.status(200).json(listado);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al obtener las donaciones" });
+    const persona = await Persona.findById(personaId);
+    if (!persona) {
+      return res.status(404).json({ mensaje: "La persona especificada no existe en la base de datos" });
     }
-};
 
-const crearDonacion = (req, res) => {
-    try {
-        const personaId = parseInt(req.body.personaId, 10);
-        const proyectoId = parseInt(req.body.proyectoId, 10);
-        const monto = Number(req.body.monto);
-
-        const datos = leerDatos();
-
-        const persona = datos.personas.find((p) => p.id === personaId);
-        if (!persona) {
-            return res.status(404).json({ mensaje: "La persona especificada no existe" });
-        }
-
-        const proyecto = datos.proyectos.find((pr) => pr.id === proyectoId);
-        if (!proyecto) {
-            return res.status(404).json({ mensaje: "El proyecto especificado no existe" });
-        }
-
-        const nuevoId = datos.donaciones.length > 0
-            ? Math.max(...datos.donaciones.map((d) => d.id)) + 1
-            : 1;
-
-        const nuevaDonacion = new Donacion(nuevoId, personaId, proyectoId, monto);
-        datos.donaciones.push(nuevaDonacion);
-
-        proyecto.recaudado += monto;
-
-        guardarDatos(datos);
-
-        res.status(201).json({
-            mensaje: "Donacion registrada exitosamente",
-            donacion: nuevaDonacion,
-            proyectoActualizado: proyecto
-        });
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al registrar la donacion" });
+    const proyecto = await Proyecto.findById(proyectoId);
+    if (!proyecto) {
+      return res.status(404).json({ mensaje: "El proyecto especificado no existe en la base de datos" });
     }
-};
 
-module.exports = {
-    obtenerDonaciones,
-    crearDonacion
+    const nuevaDonacion = new Donacion({
+      personaId,
+      proyectoId,
+      monto: Number(monto)
+    });
+
+    await nuevaDonacion.save();
+
+    // Actualizamos la recaudacion del proyecto en MongoDB usando su metodo de dominio
+    proyecto.actualizarRecaudacion(monto);
+    await proyecto.save();
+
+    res.status(201).json({
+      mensaje: "Donacion registrada exitosamente en MongoDB",
+      donacion: nuevaDonacion,
+      proyectoActualizado: proyecto
+    });
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error al registrar la donacion", error: error.message });
+  }
 };

@@ -1,20 +1,19 @@
-const express = require("express");
+import express from "express";
+import {
+  obtenerPersonas,
+  obtenerPersonaPorId,
+  crearPersona,
+  actualizarPersona,
+  eliminarPersona
+} from "../controllers/personasController.js";
+import { validarPersona } from "../middlewares/validarCampos.js";
+
 const router = express.Router();
-
-const {
-    obtenerPersonas,
-    obtenerPersonaPorId,
-    crearPersona,
-    actualizarPersona,
-    eliminarPersona
-} = require("../controllers/personasController");
-
-const { validarPersona } = require("../middlewares/validarCampos");
 
 router.get("/", obtenerPersonas);
 router.get("/:id", obtenerPersonaPorId);
 router.post("/", validarPersona, crearPersona);
-router.put("/:id", validarPersona, actualizarPersona);
+router.put("/:id", actualizarPersona);
 router.delete("/:id", eliminarPersona);
 
-module.exports = router;
+export default router;
