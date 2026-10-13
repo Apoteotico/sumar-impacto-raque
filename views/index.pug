@@ -12,22 +12,22 @@ block content
         li= integrante
 
   .caja
-    h3 Proyectos Comunitarios Vigentes
+    h3 Proyectos Comunitarios Vigentes (Persistidos en MongoDB)
     table
       thead
         tr
-          th ID
           th Nombre
           th Organizacion
           th Categoria
           th Meta ($)
           th Recaudado ($)
+          th Progreso (%)
       tbody
         each proyecto in proyectos
           tr
-            td= proyecto.id
             td= proyecto.nombre
             td= proyecto.organizacion
             td= proyecto.categoria
             td= proyecto.montoMeta
             td= proyecto.recaudado
+            td= `${Math.min(100, Math.round((proyecto.recaudado / proyecto.montoMeta) * 100))}%`

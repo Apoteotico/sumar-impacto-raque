@@ -3,29 +3,21 @@ html(lang="es")
   head
     meta(charset="UTF-8")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    title= titulo || "Sumar Impacto"
+    title #{titulo} | Sumar Impacto - IFTS 29
     link(rel="stylesheet", href="/styles.css")
   body
     header
-      h1 Sumar Impacto - Sistema de Donaciones
+      h1 Sumar Impacto
+      p Plataforma Comunitaria de Financiamiento Solidario (Grupo 15 - Comision 2A)
       nav
         a(href="/") Inicio
         |  | 
         a(href="/proyectos") Proyectos
         |  | 
-        a(href="/donaciones/nueva") Registrar Donacion
-        |  | 
-        a(href="/api/personas" target="_blank") API Personas
-        |  | 
-        a(href="/api/proyectos" target="_blank") API Proyectos
-        |  | 
-        a(href="/api/donaciones" target="_blank") API Donaciones
-
+        a(href="/donaciones/nueva") Nueva Donacion
     hr
-
-    block content
-
+    main
+      block content
     hr
-
     footer
-      p Desarrollo de Software Web - Backend | Proyecto Primera Entrega
+      p Desarrollo de Software Web - Backend | 2° Parcial (MongoDB & Mongoose) | IFTS N° 29 - 2C2026
