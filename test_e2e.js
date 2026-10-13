@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 import { conectarDB } from "./config/db.js";
 import express from "express";
 import personasRoutes from "./routes/personasRoutes.js";

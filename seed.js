@@ -1,11 +1,9 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import mongoose from "mongoose";
 import { conectarDB } from "./config/db.js";
 import Persona from "./models/Persona.js";
 import Proyecto from "./models/Proyecto.js";
 import Donacion from "./models/Donacion.js";
-
-dotenv.config();
 
 const inicializarBaseDatos = async () => {
   try {
