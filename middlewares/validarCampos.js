@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
 export const validarPersona = (req, res, next) => {
-  const { nombre, email, tipo } = req.body;
-  if (!nombre || !email || !tipo) {
+  const { nombre, email, password, tipo } = req.body;
+  if (!nombre || !email || !password || !tipo) {
     return res.status(400).json({
-      mensaje: "Campos obligatorios incompletos: nombre, email y tipo son requeridos"
+      mensaje: "Campos obligatorios incompletos: nombre, email, password y tipo son requeridos"
     });
   }
 

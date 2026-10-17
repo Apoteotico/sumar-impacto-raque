@@ -66,7 +66,7 @@ const server = app.listen(TEST_PORT, async () => {
     const resPostPer = await fetch(`${BASE_URL}/api/personas`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre: "Test QA User", email: "qa@ifts29.edu.ar", tipo: "donante" })
+      body: JSON.stringify({ nombre: "Test QA User", email: "qa@ifts29.edu.ar", password: "123456", tipo: "donante" })
     });
     const dataPostPer = await resPostPer.json();
     await assertTest("POST /api/personas crea persona con 201 Created", resPostPer.status === 201 && dataPostPer.persona.email === "qa@ifts29.edu.ar");

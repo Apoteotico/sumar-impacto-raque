@@ -23,8 +23,8 @@ export const obtenerPersonaPorId = async (req, res) => {
 
 export const crearPersona = async (req, res) => {
   try {
-    const { nombre, email, tipo } = req.body;
-    const nuevaPersona = new Persona({ nombre, email, tipo });
+    const { nombre, email, password, tipo } = req.body;
+    const nuevaPersona = new Persona({ nombre, email, password, tipo });
     await nuevaPersona.save();
 
     res.status(201).json({
@@ -38,10 +38,10 @@ export const crearPersona = async (req, res) => {
 
 export const actualizarPersona = async (req, res) => {
   try {
-    const { nombre, email, tipo } = req.body;
+    const { nombre, email, password, tipo } = req.body;
     const personaActualizada = await Persona.findByIdAndUpdate(
       req.params.id,
-      { nombre, email, tipo },
+      { nombre, email, password, tipo },
       { new: true, runValidators: true }
     );
 
