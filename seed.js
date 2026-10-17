@@ -21,21 +21,25 @@ const inicializarBaseDatos = async () => {
       {
         nombre: "Sonia Raquel Andrada",
         email: "sonia.andrada@ifts29.edu.ar",
+        password: "123456",
         tipo: "responsable"
       },
       {
         nombre: "Guillermo Chacon",
         email: "guillermo.chacon@ifts29.edu.ar",
+        password: "123456",
         tipo: "donante"
       },
       {
         nombre: "Eitel Hugo Belinzoni",
         email: "eitel.belinzoni@ifts29.edu.ar",
+        password: "123456",
         tipo: "donante"
       },
       {
         nombre: "Emilia Sosa",
         email: "emilia.sosa@ifts29.edu.ar",
+        password: "123456",
         tipo: "donante"
       }
     ]);
