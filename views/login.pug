@@ -1,0 +1,17 @@
+extends layout
+
+block content
+  h2 Iniciar sesión
+
+  form(method="POST", action="/login")
+    label(for="email") Email:
+    input(type="email", name="email", id="email", autocomplete="email", required)
+
+    label(for="password") Contraseña:
+    input(type="password", name="password", id="password", autocomplete="current-password", required)
+
+    button(type="submit") Iniciar sesión
+
+  p
+    | ¿Todavía no tenés una cuenta? 
+    a(href="/registro") Crear cuenta
