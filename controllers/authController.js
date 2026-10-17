@@ -40,3 +40,36 @@ export const procesarRegistro = async (req, res) => {
     return res.status(500).render("Error al procesar el registro: " + error.message);
   }
 };
+
+
+export const mostrarLogin = (req, res) => {
+  return res.render("login", { titulo: "Iniciar sesión" });
+};
+
+export const procesarLogin = async (req, res) => {
+  const email =
+    typeof req.body?.email === "string"
+      ? req.body.email.trim().toLowerCase()
+      : "";
+
+  const password =
+    typeof req.body?.password === "string"
+      ? req.body.password
+      : "";
+
+  if (!email || !password) {
+    return res.status(400).send("Email y contraseña son obligatorios");
+  }
+
+  try {
+    const persona = await Persona.findOne({ email, password });
+
+    if (!persona) {
+      return res.status(401).send("Credenciales inválidas");
+    }
+
+    return res.redirect("/");
+  } catch (error) {
+    return res.status(500).send("Error al procesar el login");
+  }
+};
